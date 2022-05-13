@@ -1,47 +1,16 @@
-import functools
-import time
-from django.db import connection, reset_queries
-from django.http import Http404
-from rest_framework import views
-from staff import serializers
-
 from staff.models import Staff, PositionAtWork
 from staff.serializers import (StaffSerializer, PositionAtWorkSerializer)
 from rest_framework.response import Response
-from rest_framework import generics, status, mixins
+from rest_framework import generics, filters, pagination
 
 
-def query_debugger(func):
-
-    # @functools.wraps(func)
-    def inner_func(*args, **kwargs):
-
-        reset_queries()
-        
-        start_queries = len(connection.queries)
-
-        start = time.perf_counter()
-        result = func(*args, **kwargs)
-        end = time.perf_counter()
-
-        end_queries = len(connection.queries)
-
-        print(f"Function : {func.__name__}")
-        print(f"Number of Queries : {end_queries - start_queries}")
-        print(f"Finished in : {(end - start):.2f}s")
-        return result
-
-    return inner_func
-
-
-class StaffView(generics.ListCreateAPIView):
+class StaffTreeView(generics.ListAPIView):
 
     serializer_class = StaffSerializer
 
     def get_queryset(self):
-        return Staff.objects.all().get_cached_trees()
+        return Staff.objects.select_related('parent', 'position_at_work').all().get_cached_trees()
 
-    @query_debugger
     def get(self, request):
         qyeryset = self.get_queryset()
 
@@ -53,24 +22,42 @@ class StaffView(generics.ListCreateAPIView):
 
     def recursive_subordinate(self, item):
         result = StaffSerializer(item).data
-        subordinate = [self.recursive_subordinate(c) for c in item.get_children()]
+        subordinate = [self.recursive_subordinate(
+            c) for c in item.get_children()]
         if subordinate:
             result["Подчиненный"] = subordinate
         return result
 
 
-class StaffDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+class StandardResultsSetPagination(pagination.PageNumberPagination):
+    page_size = 2
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+
+class StaffView(generics.ListCreateAPIView):
+
+    serializer_class = StaffSerializer
+
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['first_name', 'last_name', 'patronymic', 'position_at_work__title', '=employment_date', 'wage', 'parent__id']
+    ordering_fields = ['first_name', 'last_name', 'patronymic', 'position_at_work__title', 'employment_date', 'wage']
+    pagination_class = StandardResultsSetPagination
     
+
+    def get_queryset(self):
+        return Staff.objects.select_related('parent', 'position_at_work').all()
+
+
+class StaffDetailView(generics.RetrieveUpdateDestroyAPIView):
+
     serializer_class = StaffSerializer
     queryset = Staff.objects.all()
 
 
-class CompanyStructure(views.APIView):
-    pass
-
-
 class PositionAtWorkView(generics.ListCreateAPIView):
-    
+
     queryset = PositionAtWork.objects.all()
     serializer_class = PositionAtWorkSerializer
 
