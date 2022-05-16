@@ -1,7 +1,8 @@
-from staff.models import Staff, PositionAtWork
-from staff.serializers import (StaffSerializer, PositionAtWorkSerializer)
+from staff.models import Staff
+from staff.paginations import StandardResultsSetPagination
+from staff.serializers import StaffSerializer
 from rest_framework.response import Response
-from rest_framework import generics, filters, pagination
+from rest_framework import generics, filters
 
 
 class StaffTreeView(generics.ListAPIView):
@@ -9,7 +10,7 @@ class StaffTreeView(generics.ListAPIView):
     serializer_class = StaffSerializer
 
     def get_queryset(self):
-        return Staff.objects.select_related('parent', 'position_at_work').all().get_cached_trees()
+        return Staff.objects.select_related('position_at_work').all().get_cached_trees()
 
     def get(self, request):
         qyeryset = self.get_queryset()
@@ -27,13 +28,6 @@ class StaffTreeView(generics.ListAPIView):
         if subordinate:
             result["Подчиненный"] = subordinate
         return result
-
-
-
-class StandardResultsSetPagination(pagination.PageNumberPagination):
-    page_size = 2
-    page_size_query_param = 'page_size'
-    max_page_size = 1000
 
 
 class StaffView(generics.ListCreateAPIView):
@@ -54,15 +48,3 @@ class StaffDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     serializer_class = StaffSerializer
     queryset = Staff.objects.all()
-
-
-class PositionAtWorkView(generics.ListCreateAPIView):
-
-    queryset = PositionAtWork.objects.all()
-    serializer_class = PositionAtWorkSerializer
-
-
-class PositionAtWorkDetailView(generics.RetrieveUpdateDestroyAPIView):
-
-    queryset = PositionAtWork.objects.all()
-    serializer_class = PositionAtWorkSerializer
