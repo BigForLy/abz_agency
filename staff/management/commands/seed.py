@@ -1,7 +1,8 @@
 from random import choice, randint
 from django.core.management.base import BaseCommand
 
-from staff.models import PositionAtWork, Staff
+from staff.models import Staff
+from position_at_work.models import PositionAtWork
 
 
 class Command(BaseCommand):

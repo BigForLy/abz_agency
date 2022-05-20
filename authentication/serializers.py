@@ -46,7 +46,8 @@ class LoginSerializer(serializers.Serializer):
                 'A user with this username and password was not found.'
             )
         else:
-            user.token = Token.objects.get(user=user).key
+            token, _ = Token.objects.get_or_create(user=user)
+            user.token = token.key
 
         if not user.is_active:
             raise serializers.ValidationError(

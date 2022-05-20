@@ -3,7 +3,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-from authentication.serializers import LoginSerializer, RegistrationSerializer, UserSerializer
+from authentication.serializers import LoginSerializer, RegistrationSerializer
 
 
 class RegistrationAPIView(views.APIView):
