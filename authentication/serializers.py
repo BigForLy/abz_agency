@@ -2,6 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from rest_framework import exceptions
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -42,17 +43,13 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=username, password=password)
 
         if user is None:
-            raise serializers.ValidationError(
-                'A user with this username and password was not found.'
-            )
+            raise exceptions.AuthenticationFailed('A user with this username and password was not found.')
         else:
             token, _ = Token.objects.get_or_create(user=user)
             user.token = token.key
 
         if not user.is_active:
-            raise serializers.ValidationError(
-                'This user has been deactivated.'
-            )
+            raise exceptions.NotFound('This user has been deactivated.')
 
         return {
             'token': user.token
