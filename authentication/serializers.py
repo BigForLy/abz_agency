@@ -43,7 +43,8 @@ class LoginSerializer(serializers.Serializer):
         user = authenticate(username=username, password=password)
 
         if user is None:
-            raise exceptions.AuthenticationFailed('A user with this username and password was not found.')
+            raise exceptions.AuthenticationFailed(
+                'A user with this username and password was not found.')
         else:
             token, _ = Token.objects.get_or_create(user=user)
             user.token = token.key
