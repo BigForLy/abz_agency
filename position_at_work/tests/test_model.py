@@ -1,8 +1,8 @@
-from position_at_work.tests.test_setup import TestSetUp
+from ..tests.test_setup import TestSetUp
 
 from ..models import PositionAtWork
 
-class PositionAtWorkTest(TestSetUp):
+class PositionAtWorkModelTest(TestSetUp):
 
     def test_model_can_create_correctly(self):
         PositionAtWork.objects.create(title=self.data['title2'])
