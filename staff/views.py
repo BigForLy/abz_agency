@@ -10,8 +10,8 @@ class StaffTreeView(generics.ListAPIView):
     serializer_class = StaffSerializer
 
     def get_queryset(self):
-        return Staff.objects.select_related('position_at_work').all().get_cached_trees()
-
+        return Staff.objects.select_related('position_at_work').all()
+    
     def get(self, request):
         qyeryset = self.get_queryset()
 
